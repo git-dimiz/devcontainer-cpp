@@ -1,3 +1,4 @@
 build
 *.cid
 *.state
+compile_commands.json

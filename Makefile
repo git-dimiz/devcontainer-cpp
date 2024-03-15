@@ -16,7 +16,7 @@ endef
 DEVCONTAINER_ENV ?= 0
 TYPE ?= Release
 PLATFORM ?= x64-clang
-BUILD_DIR := build/$(call f_lower,$(PLATFORM))/$(call f_lower,$(TYPE))
+BUILD_DIR ?= build/$(call f_lower,$(PLATFORM))/$(call f_lower,$(TYPE))
 DEVCONTAINER_DIR := .devcontainer
 DOCKER_CONTAINER_NAME := cpp
 DOCKER_COMPOSE_YML := $(DEVCONTAINER_DIR)/docker-compose.yml
@@ -80,7 +80,7 @@ configure: docker-compose-up
 >   $(call f_exec,$(CMAKE_PREFIX_OPTS) cmake $(CMAKE_OPTS))
 
 .PHONY: build
-build: configure
+build: configure compile-commands
 >   $(call f_exec,cmake --build $(BUILD_DIR) --target all --parallel)
 
 .PHONY: clean
@@ -93,3 +93,12 @@ distclean: docker-compose-up
 
 .PHONY: teardown
 teardown: distclean docker-compose-down
+
+.PHONY: gen-compile-commands
+gen-compile-commands:
+>   @make configure
+>   @cp $(BUILD_DIR)/compile_commands.json .vscode/compile_commands.json
+
+.PHONY: compile-commands
+compile-commands:
+>   BUILD_DIR=build/compile-commands make gen-compile-commands
