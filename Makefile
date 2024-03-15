@@ -58,12 +58,12 @@ all: build
 
 .PHONY: docker-compose-up
 docker-compose-up:
->   $(call f_shell,docker compose -f $(DOCKER_COMPOSE_YML) up -d)
+>   $(call f_shell,docker compose -f $(DOCKER_COMPOSE_YML) up --detach)
 
 .PHONY: docker-compose-down
 docker-compose-down:
->   $(call f_shell,docker rm $(DOCKER_CONTAINER_NAME) || true)
 >   $(call f_shell,docker compose -f $(DOCKER_COMPOSE_YML) down $(DOCKER_CONTAINER_NAME) || true)
+>   $(call f_shell,docker rm $(DOCKER_CONTAINER_NAME) &> /dev/null || true)
 
 .PHONY: docker-attach
 docker-attach: docker-compose-up
@@ -73,7 +73,9 @@ docker-attach: docker-compose-up
 attach: docker-attach
 
 .PHONY: setup
-setup: docker-compose-down docker-compose-up
+setup: docker-compose-down
+    # Rebuild docker conatiner
+>   $(call f_shell,docker compose -f $(DOCKER_COMPOSE_YML) up --build --detach)
 
 .PHONY: configure
 configure: docker-compose-up
@@ -91,8 +93,8 @@ clean: docker-compose-up
 distclean: docker-compose-up
 >   $(call f_exec,rm -rf $(BUILD_DIR))
 
-.PHONY: teardown
-teardown: distclean docker-compose-down
+.PHONY: down
+down: docker-compose-down
 
 .PHONY: gen-compile-commands
 gen-compile-commands:
