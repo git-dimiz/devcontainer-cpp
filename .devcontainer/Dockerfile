@@ -26,6 +26,7 @@ RUN apt update && \
         clang-tidy-17 \
         clang-format-17 \
         libclang-17-dev \
+        gdb-multiarch \
         gcc-13
 
 RUN update-alternatives --install /usr/bin/run-clang-tidy run-clang-tidy /usr/lib/llvm-17/bin/run-clang-tidy 100

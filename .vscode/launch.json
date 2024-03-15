@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Cpp: Debug App",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/x64-clang/debug/example",
+            "args": [
+                "arg1",
+                "arg2"
+            ],
+            "environment": [
+                {
+                    "name": "config",
+                    "value": "Debug"
+                }
+            ],
+            "cwd": "${workspaceFolder}",
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb"
+            },
+            "preLaunchTask": "Build: Debug"
+        }
+    ]
+}
