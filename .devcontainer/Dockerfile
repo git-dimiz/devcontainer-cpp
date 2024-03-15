@@ -18,6 +18,7 @@ RUN apt update && \
         wget \
         curl \
         jq \
+        neovim \
         cmake \
         silversearcher-ag \
         fd-find \
