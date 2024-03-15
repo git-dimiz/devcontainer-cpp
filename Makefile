@@ -16,7 +16,8 @@ endef
 DEVCONTAINER_ENV ?= 0
 TYPE ?= Release
 PLATFORM ?= x64-clang
-BUILD_DIR ?= build/$(call f_lower,$(PLATFORM))/$(call f_lower,$(TYPE))
+BUILD_ROOT_DIR := build
+BUILD_DIR ?= $(BUILD_ROOT_DIR)/$(call f_lower,$(PLATFORM))/$(call f_lower,$(TYPE))
 DEVCONTAINER_DIR := .devcontainer
 DOCKER_CONTAINER_NAME := cpp
 DOCKER_COMPOSE_YML := $(DEVCONTAINER_DIR)/docker-compose.yml
@@ -91,7 +92,7 @@ clean: docker-compose-up
 
 .PHONY: distclean
 distclean: docker-compose-up
->   $(call f_exec,rm -rf $(BUILD_DIR))
+>   $(call f_exec,rm -rf $(BUILD_ROOT_DIR))
 
 .PHONY: down
 down: docker-compose-down
@@ -103,4 +104,4 @@ gen-compile-commands:
 
 .PHONY: compile-commands
 compile-commands:
->   BUILD_DIR=build/compile-commands make gen-compile-commands
+>   BUILD_DIR=$(BUILD_ROOT_DIR)/compile-commands make gen-compile-commands
