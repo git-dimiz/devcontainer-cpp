@@ -14,7 +14,8 @@
 				"Guyutongxue.cpp-reference",
 				"cschlosser.doxdocgen",
 				"streetsidesoftware.code-spell-checker",
-				"yzhang.markdown-all-in-one"
+				"yzhang.markdown-all-in-one",
+				"ms-vscode.cmake-tools"
 			]
 		}
 	}
