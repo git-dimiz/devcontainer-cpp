@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  cpp:
+    container_name: cpp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../:/workspace
+    working_dir: /workspace
+    command: sleep infinity
+    tty: true
+    stdin_open: true
+    user: "1000:1000"
+    environment:
+      - LOCAL_BUILD_ENV=1

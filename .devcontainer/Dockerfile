@@ -32,10 +32,6 @@ RUN update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/cl
 RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 100
 RUN update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-17 100
 
-# RUN apt-get -y install sudo
-# RUN useradd -m user && echo "user:user" | chpasswd && adduser user sudo
-# USER user
-
 RUN mkdir -p ~/.ssh
 RUN ssh-keyscan github.com >> ~/.ssh/known_hosts
 RUN ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
