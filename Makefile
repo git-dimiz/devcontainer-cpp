@@ -13,43 +13,28 @@ define f_lower
 $$(echo "$(1)" | tr '[:upper:]' '[:lower:]')
 endef
 
-VERBOSE ?= 0
-LOCAL_BUILD_ENV ?= 0
-
-ifeq ($(VERBOSE),1)
-    ECHO :=
-else
-    ECHO := @
-endif
-
-DOCKER_EXE := docker
-DOCKER_CONTAINER_NAME := dev-container
-DOCKER_CONTAINER_TAG := $(DOCKER_CONTAINER_NAME)
-DOCKER_CONTAINER_CID := .devcontainer/$(DOCKER_CONTAINER_NAME).cid
-DOCKER_WORKSPACE_DIR := /workspace
-
-STATE_DOCKER_BUILD := .devcontainer/docker-build.state
-
-LOCAL_DIR := $(abspath $(shell pwd))
-LOCAL_BUILD_DIR := $(LOCAL_DIR)/build
-
+DEVCONTAINER_ENV ?= 0
 TYPE ?= Release
-ifeq ($(LOCAL_BUILD_ENV),1)
-    WORKSPACE_DIR := $(LOCAL_DIR)
-else
-    WORKSPACE_DIR := $(DOCKER_WORKSPACE_DIR)
-endif
-BUILD_DIR := $(WORKSPACE_DIR)/build/$(call f_lower,$(TYPE))
+PLATFORM ?= x64-clang
+BUILD_DIR := build/$(call f_lower,$(PLATFORM))/$(call f_lower,$(TYPE))
+DEVCONTAINER_DIR := .devcontainer
+DOCKER_CONTAINER_NAME := cpp
+DOCKER_COMPOSE_YML := $(DEVCONTAINER_DIR)/docker-compose.yml
 
-CMAKE_OPTS += -S $(WORKSPACE_DIR)
+CMAKE_OPTS += -S .
 CMAKE_OPTS += -B $(BUILD_DIR)
 CMAKE_OPTS += -G Ninja
 CMAKE_OPTS += -D CMAKE_BUILD_TYPE=$(TYPE)
 CMAKE_OPTS += -D CMAKE_EXPORT_COMPILE_COMMANDS=On
 CMAKE_OPTS += -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
 CMAKE_OPTS += -D CMAKE_C_COMPILER_LAUNCHER=ccache
+ifeq ($(PLATFORM),x64-gcc)
+    CMAKE_PREFIX_OPTS := CC=gcc CXX=g++
+else ifeq ($(PLATFORM),x64-clang)
+    CMAKE_PREFIX_OPTS := CC=clang CXX=clang++
+endif
 
-ifeq ($(LOCAL_BUILD_ENV),0)
+ifeq ($(DEVCONTAINER_ENV),0)
     define f_shell
     $(1)
     endef
@@ -58,9 +43,9 @@ else
     endef
 endif
 
-ifeq ($(LOCAL_BUILD_ENV),0)
+ifeq ($(DEVCONTAINER_ENV),0)
     define f_exec
-    docker exec -it $$(cat $(DOCKER_CONTAINER_CID)) /bin/bash -c "$(1)"
+    docker exec -it $(DOCKER_CONTAINER_NAME) /bin/bash -c "$(1)"
     endef
 else
     define f_exec
@@ -71,68 +56,40 @@ endif
 .PHONY: all
 all: build
 
-$(STATE_DOCKER_BUILD):
->   $(ECHO)$(call f_shell,$(DOCKER_EXE) build \
-       --ssh default=$(shell echo $${SSH_AUTH_SOCK}) \
-       --file .devcontainer/Dockerfile \
-       --tag $(DOCKER_CONTAINER_TAG) .)
->   $(ECHO)$(call f_shell,touch $(STATE_DOCKER_BUILD))
+.PHONY: docker-compose-up
+docker-compose-up:
+>   $(call f_shell,docker compose -f $(DOCKER_COMPOSE_YML) up -d)
 
-.PHONY: docker-build
-docker-build: $(STATE_DOCKER_BUILD)
-
-.PHONY: docker-rebuild
-docker-rebuild:
->   $(ECHO)$(call f_shell,rm $(STATE_DOCKER_BUILD))
->   $(ECHO)make docker-build
-
-$(DOCKER_CONTAINER_CID):
->   $(ECHO)$(call f_shell,$(DOCKER_EXE) run \
-        --rm \
-        -dt \
-        --user $$(id -u):$$(id -g) \
-        -e SSH_AUTH_SOCK=/ssh-agent \
-        -v $(shell echo $${SSH_AUTH_SOCK}):/ssh-agent \
-        --volume=$(LOCAL_DIR):$(DOCKER_WORKSPACE_DIR) \
-        --workdir=$(DOCKER_WORKSPACE_DIR) \
-        --name $(DOCKER_CONTAINER_NAME) \
-        --cidfile $(DOCKER_CONTAINER_CID) \
-        $(DOCKER_CONTAINER_TAG))
-
-.PHONY: docker-start
-docker-start: docker-build $(DOCKER_CONTAINER_CID)
-
-.PHONY: docker-stop
-docker-stop:
->   $(ECHO)[ -f $(DOCKER_CONTAINER_CID) ] && [ "$$(docker container inspect -f '{{.State.Running}}' $$(cat $(DOCKER_CONTAINER_CID)) )" = "true" ] && docker stop $$(cat $(DOCKER_CONTAINER_CID))
->   $(ECHO)rm -f $(DOCKER_CONTAINER_CID)
+.PHONY: docker-compose-down
+docker-compose-down:
+>   $(call f_shell,docker rm $(DOCKER_CONTAINER_NAME) || true)
+>   $(call f_shell,docker compose -f $(DOCKER_COMPOSE_YML) down $(DOCKER_CONTAINER_NAME) || true)
 
 .PHONY: docker-attach
-docker-attach: docker-start
->   $(ECHO)$(call f_shell,$(DOCKER_EXE) exec -it $$(cat $(DOCKER_CONTAINER_CID)) /bin/bash)
+docker-attach: docker-compose-up
+>   $(call f_shell,docker exec -it $(DOCKER_CONTAINER_NAME) /bin/bash)
 
 .PHONY: attach
 attach: docker-attach
 
 .PHONY: setup
-setup: docker-stop docker-rebuild
+setup: docker-compose-down docker-compose-up
 
 .PHONY: configure
-configure: docker-start
->   $(ECHO)$(call f_exec,cmake $(CMAKE_OPTS))
+configure: docker-compose-up
+>   $(call f_exec,$(CMAKE_PREFIX_OPTS) cmake $(CMAKE_OPTS))
 
 .PHONY: build
 build: configure
->   $(ECHO)$(call f_exec,cmake --build $(BUILD_DIR) --target all --parallel)
+>   $(call f_exec,cmake --build $(BUILD_DIR) --target all --parallel)
 
 .PHONY: clean
-clean: docker-start
->   $(ECHO)$(call f_exec,cmake --build $(BUILD_DIR) --target clean --parallel)
+clean: docker-compose-up
+>   $(call f_exec,cmake --build $(BUILD_DIR) --target clean --parallel)
 
 .PHONY: distclean
-distclean: docker-start
->   $(ECHO)$(call f_exec,rm -rf $(BUILD_DIR))
+distclean: docker-compose-up
+>   $(call f_exec,rm -rf $(BUILD_DIR))
 
 .PHONY: teardown
-teardown: distclean docker-stop
->   $(ECHO)$(call f_shell,$(DOCKER_EXE) image rm -f $(DOCKER_CONTAINER_TAG))
+teardown: distclean docker-compose-down
