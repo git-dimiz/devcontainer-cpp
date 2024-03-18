@@ -86,6 +86,43 @@ configure: docker-compose-up
 build: configure compile-commands
 >   $(call f_exec,cmake --build $(BUILD_DIR) --target all --parallel)
 
+.PHONY: clang-format
+clang-format: configure
+>   $(call f_exec,cmake --build $(BUILD_DIR) --target $@ --parallel)
+
+.PHONY: check-format
+check-format: configure
+>   $(call f_exec,cmake --build $(BUILD_DIR) --target $@ --parallel)
+
+.PHONY: _iwyu
+_iwyu: configure
+>   $(call f_exec,cmake --build $(BUILD_DIR) --target iwyu --parallel)
+
+.PHONY: iwyu
+iwyu:
+>   PLATFORM=amd64-clang make _iwyu
+
+.PHONY: _fix-includes
+_fix-includes: configure
+>   $(call f_exec,cmake --build $(BUILD_DIR) --target fix-includes --parallel)
+>   make clang-format
+
+.PHONY: fix-includes
+fix-includes:
+>   PLATFORM=x64-clang make _fix-includes
+
+.PHONY: _clang-tidy
+_clang-tidy:
+>   BUILD_DIR=$(BUILD_DIR)-clang-tidy CMAKE_OPTS=" -D CMAKE_UNITY_BUILD=ON -D CMAKE_UNITY_BUILD_BATCH_SIZE=0" make configure
+>   $(call f_exec,cmake --build $(BUILD_DIR)-clang-tidy --target clang-tidy --parallel)
+
+.PHONY: clang-tidy
+clang-tidy:
+>   PLATFORM=x64-clang TYPE=Release make _clang-tidy
+
+.PHONY: checks
+checks: iwyu clang-tidy check-format
+
 .PHONY: clean
 clean: docker-compose-up
 >   $(call f_exec,cmake --build $(BUILD_DIR) --target clean --parallel)
