@@ -4,16 +4,48 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build: Release",
+            "label": "Build",
             "type": "shell",
-            "command": "TYPE=Release make",
+            "command": "TYPE=${input:type} PLATFORM=${input:platform} make ${input:target}",
             "group": "build"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "type",
+            "type": "pickString",
+            "description": "Selected Build Type",
+            "options": [
+                "Debug",
+                "Release",
+            ],
+            "default": "Release",
         },
         {
-            "label": "Build: Debug",
-            "type": "shell",
-            "command": "TYPE=Debug make",
-            "group": "build"
+            "id": "platform",
+            "type": "pickString",
+            "description": "Selected Build Platform",
+            "options": [
+                "x64-clang",
+                "x64-gcc",
+            ],
+            "default": "x64-clang",
+        },
+        {
+            "id": "target",
+            "type": "pickString",
+            "description": "Selected Build Platform",
+            "options": [
+                "all",
+                "clean",
+                "distclean",
+                "fix-includes",
+                "iwyu",
+                "clang-tidy",
+                "check-format",
+                "checks"
+            ],
+            "default": "all",
         }
     ]
 }
