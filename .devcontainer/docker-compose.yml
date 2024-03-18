@@ -6,6 +6,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        IWYU_TAG: "0.21"
     volumes:
       - ../:/workspace
     working_dir: /workspace
