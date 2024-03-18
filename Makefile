@@ -30,9 +30,9 @@ CMAKE_OPTS += -D CMAKE_EXPORT_COMPILE_COMMANDS=On
 CMAKE_OPTS += -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
 CMAKE_OPTS += -D CMAKE_C_COMPILER_LAUNCHER=ccache
 ifeq ($(PLATFORM),x64-gcc)
-    CMAKE_PREFIX_OPTS := CC=gcc CXX=g++
+    CMAKE_PREFIX_OPTS += CC=gcc CXX=g++
 else ifeq ($(PLATFORM),x64-clang)
-    CMAKE_PREFIX_OPTS := CC=clang CXX=clang++
+    CMAKE_PREFIX_OPTS += CC=clang CXX=clang++
 endif
 
 ifeq ($(DEVCONTAINER_ENV),0)
@@ -84,7 +84,9 @@ configure: docker-compose-up
 
 .PHONY: build
 build: configure compile-commands
->   $(call f_exec,cmake --build $(BUILD_DIR) --target all --parallel)
+>   export CCACHE_DIR=$(shell $(call f_exec,realpath $(BUILD_ROOT_DIR)/ccache))
+>   $(call f_exec,mkdir -p $${CCACHE_DIR})
+>   $(call f_exec,CCACHE_DIR=$${CCACHE_DIR} cmake --build $(BUILD_DIR) --target all --parallel)
 
 .PHONY: clang-format
 clang-format: configure
