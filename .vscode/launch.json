@@ -8,7 +8,7 @@
             "name": "Cpp: Debug App",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/x64-clang/debug/example",
+            "program": "${workspaceFolder}/build/${input:platform}/${input:type}/example",
             "args": [
                 "arg1",
                 "arg2"
@@ -24,7 +24,29 @@
                 "MIMode": "gdb",
                 "miDebuggerPath": "/usr/bin/gdb"
             },
-            "preLaunchTask": "Build: Debug"
+            "preLaunchTask": "Build"
         }
+    ],
+    "inputs": [
+        {
+            "id": "type",
+            "type": "pickString",
+            "description": "Selected Build Type",
+            "options": [
+                "Debug",
+                "Release",
+            ],
+            "default": "Release",
+        },
+        {
+            "id": "platform",
+            "type": "pickString",
+            "description": "Selected Build Platform",
+            "options": [
+                "x64-clang",
+                "x64-gcc",
+            ],
+            "default": "x64-clang",
+        },
     ]
 }
