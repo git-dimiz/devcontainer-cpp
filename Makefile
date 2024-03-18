@@ -100,7 +100,7 @@ _iwyu: configure
 
 .PHONY: iwyu
 iwyu:
->   PLATFORM=amd64-clang make _iwyu
+>   PLATFORM=x64-clang make _iwyu
 
 .PHONY: _fix-includes
 _fix-includes: configure
