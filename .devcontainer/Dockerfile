@@ -1,12 +1,16 @@
-FROM ubuntu:23.10
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Berlin
 
-RUN apt update && \
-    apt install -yq \
+RUN <<EOF
+    apt-get -y update
+    apt-get -y upgrade
+    apt-get -yq install \
+        sudo \
         make \
         tio \
+        socat \
         sshpass \
         ninja-build \
         ccache \
@@ -22,25 +26,35 @@ RUN apt update && \
         cmake \
         silversearcher-ag \
         fd-find \
-        clang-17 \
-        clang-tidy-17 \
-        clang-format-17 \
-        libclang-17-dev \
+        clang-18 \
+        clang-tidy-18 \
+        clang-format-18 \
+        mold \
+        libclang-18-dev \
         gdb-multiarch \
-        gcc-13
+        gcc-14
 
-RUN update-alternatives --install /usr/bin/run-clang-tidy run-clang-tidy /usr/lib/llvm-17/bin/run-clang-tidy 100
-RUN update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-17 100
-RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 100
-RUN update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-17 100
+    apt-get -y clean
+    rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p ~/.ssh
-RUN ssh-keyscan github.com >> ~/.ssh/known_hosts
-RUN ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
+    update-alternatives --install /usr/bin/run-clang-tidy run-clang-tidy /usr/lib/llvm-18/bin/run-clang-tidy 100
+    update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-18 100
+    update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
+
+    mkdir -p ~/.ssh
+    ssh-keyscan github.com >> ~/.ssh/known_hosts
+    ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
+
+    usermod -aG sudo ubuntu
+    echo "ubuntu  ALL=(ALL) NOPASSWD:ALL" | tee /etc/sudoers.d/ubuntu
+EOF
 
 ARG IWYU_TAG
-RUN git clone -b ${IWYU_TAG} --single-branch --depth 1 https://github.com/include-what-you-use/include-what-you-use /tmp/iwyu
-RUN cmake -S /tmp/iwyu -B /tmp/iwyu/build
-RUN cmake --build /tmp/iwyu/build --parallel
-RUN cmake --install /tmp/iwyu/build
-RUN rm -rf /tmp/iwyu
+RUN <<EOF
+    git clone -b ${IWYU_TAG} --single-branch --depth 1 https://github.com/include-what-you-use/include-what-you-use /tmp/iwyu
+    cmake -S /tmp/iwyu -B /tmp/iwyu/build
+    cmake --build /tmp/iwyu/build --parallel
+    cmake --install /tmp/iwyu/build
+    rm -rf /tmp/iwyu
+EOF
