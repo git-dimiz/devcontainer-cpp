@@ -33,8 +33,8 @@
             "type": "pickString",
             "description": "Selected Build Type",
             "options": [
-                "Debug",
-                "Release",
+                "debug",
+                "release",
             ],
             "default": "Release",
         },
