@@ -2,7 +2,15 @@
     "editor.formatOnSave": true,
     "C_Cpp.formatting": "clangFormat",
     "C_Cpp.clang_format_fallbackStyle": "LLVM",
+    "C_Cpp.autocomplete": "disabled",
     "[cpp]": {
-        "editor.defaultFormatter": "ms-vscode.cpptools"
-    }
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+        "editor.formatOnSave": true,
+        "editor.inlayHints.enabled": "off"
+    },
+    "clangd.path": "clangd",
+    "clangd.arguments": [
+        "--header-insertion=iwyu",
+        "--compile-commands-dir=${workspaceFolder}/build"
+    ]
 }

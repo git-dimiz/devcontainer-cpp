@@ -29,6 +29,7 @@ RUN <<EOF
         clang-18 \
         clang-tidy-18 \
         clang-format-18 \
+        clangd \
         mold \
         libclang-18-dev \
         gdb-multiarch \
